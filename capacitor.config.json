@@ -1,0 +1,6 @@
+{
+  "appId": "io.github.danielde8.xcomps",
+  "appName": "XComps",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

@@ -1,0 +1,299 @@
+<script>
+    import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
+    import { Preferences } from '@capacitor/preferences'
+	import { fetchCompTasks, fetchCompAirspace, fetchCompWaypoints } from "../lib/fetch"
+    import { compStore, viewStore } from "../lib/stores.js"
+    import { CORSPROXY_URL, taskFileName, waypointFileName, airspaceFileName, SOARINGSPOT_URL } from "../lib/consts.js"
+
+    let taskDownloadSuccess = false
+    let waypointDownloadSuccess = false
+    let airspaceDownloadSuccess = false
+
+	let selectedClass = ""
+
+	$: comp = JSON.parse($compStore)
+
+    let downloadFolders = []
+
+	function taskByClass(tasks, taskClass) {
+		if (!tasks || tasks.length === 0) return null
+
+		return tasks.find(task => task.taskClass == taskClass)
+	}
+
+	async function downloadTask(task) {
+		if (!task) return
+        if (downloadFolders.length === 0) {
+            alert("Please select at least one folder to download the task to.")
+            return
+        }
+        console.log("Downloading task:", task)
+        console.log("To folders:", downloadFolders)
+
+        const taskFileContent = await fetch(CORSPROXY_URL + task.href).then(res => res.text())
+
+        for (const folder of downloadFolders) {
+            const filePath = `Android/media/${folder.name}/${taskFileName}`
+
+            try {
+                const result = await Filesystem.writeFile({
+                    path: filePath,
+                    data: taskFileContent,
+                    directory: Directory.ExternalStorage,
+                    encoding: Encoding.UTF8
+                })
+    
+                console.log(`Task file written to ${folder.name}:`, result)
+
+                taskDownloadSuccess = true
+                setTimeout(() => taskDownloadSuccess = false, 1500)
+            } catch (e) {
+                console.log(`Error writing task file to ${folder.name}:`, e)
+                alert(`Unable to write task file to ${folder.name}: ` + e.message)
+            }
+        }
+	}
+
+    async function downloadWaypoints() {
+        if (downloadFolders.length === 0) {
+            alert("Please select at least one folder to download the Waypoints file to.")
+            return
+        }
+        console.log("Downloadint waypoints to folders:", downloadFolders)
+
+        const waypointUrl = await fetchCompWaypoints(comp.href)
+        const waypointFileContent = await fetch(SOARINGSPOT_URL + waypointUrl).then(res => res.text())
+
+        for (const folder of downloadFolders) {
+            const filePath = `Android/media/${folder.name}/${waypointFileName}`
+
+            try {
+                const result = await Filesystem.writeFile({
+                    path: filePath,
+                    data: waypointFileContent,
+                    directory: Directory.ExternalStorage,
+                    encoding: Encoding.UTF8
+                })
+            
+                console.log(`Waypoints file written to ${folder.name}:`, result)
+
+                waypointDownloadSuccess = true
+                setTimeout(() => waypointDownloadSuccess = false, 1500)
+            } catch (e) {
+                console.log(`Error writing waypoints file to ${folder.name}:`, e)
+                alert(`Unable to write waypoints file to ${folder.name}: ` + e.message)
+            } 
+        }
+    }
+
+    async function downloadAirspace() {
+        if (downloadFolders.length === 0) {
+            alert("Please select at least one folder to download the Airspace file to.")
+            return
+        }
+        console.log("Downloadint airspace to folders:", downloadFolders)
+
+        const airspaceUrl = await fetchCompAirspace(comp.href)
+        const airspaceFileContent = await fetch(SOARINGSPOT_URL + airspaceUrl).then(res => res.text())
+
+        for (const folder of downloadFolders) {
+            const filePath = `Android/media/${folder.name}/${airspaceFileName}`
+
+            try {
+                const result = await Filesystem.writeFile({
+                    path: filePath,
+                    data: airspaceFileContent,
+                    directory: Directory.ExternalStorage,
+                    encoding: Encoding.UTF8
+                })
+            
+                console.log(`Airspace file written to ${folder.name}:`, result)
+
+                airspaceDownloadSuccess = true
+                setTimeout(() => airspaceDownloadSuccess = false, 1500)
+            } catch (e) {
+                console.log(`Error writing airspace file to ${folder.name}:`, e)
+                alert(`Unable to write airspace file to ${folder.name}: ` + e.message)
+            } 
+        }
+    }
+
+    async function findSoarFolders() {
+        try {
+            const result = await Filesystem.readdir({
+                path: "Android/media",
+                directory: Directory.ExternalStorage
+            })
+            console.log("Read dir result:", result)
+
+            var soarFolders = result.files.filter(info => info.name.includes('soar') && info.type == "directory")
+                .map((info) => ({ name: info.name, preferred: false }))
+
+            console.log("SOAR folders:", soarFolders)
+
+            soarFolders = await checkPreferred(soarFolders)
+
+            console.log("SOAR folders with preferred:", soarFolders)
+
+            return soarFolders
+        } catch (e) {
+            alert('Unable to read SOAR folders: ' + e.message)
+            console.log("Error reading SOAR folders:", e)
+            return []
+        }
+    }
+
+    async function checkPreferred(soarFolders) {
+        // const preferredFoldersRaw = await Preferences.get({ key: "preferredFolders" })
+        // const preferredFolders = JSON.parse(preferredFoldersRaw?.value || "[]")
+
+        // console.log("Raw preferred folders from preferences:", preferredFoldersRaw)
+        // console.log("preferred folders from preferences:", preferredFolders)
+
+        // downloadFolders
+        //     .push(...preferredFolders?.filter(f => soarFolders.some(sf => sf.name === f))?.map((name) => ({ name, preferred: true })) || [])
+
+        // console.log("Download folders:", downloadFolders)
+
+        // return soarFolders.map(folder => ({
+        //     ...folder,
+        //     preferred: preferredFolders?.includes(folder.name) || false
+        // }))
+
+        return await Promise.all(soarFolders.map(async (folder) => {
+            const preferredRaw = await Preferences.get({ key: folder.name })
+            var preferred = (preferredRaw?.value || "true") == "true" // true by default
+
+            if (preferred) {
+                downloadFolders.push(folder)
+            }
+
+            return {
+                ...folder,
+                preferred
+            }
+        }))
+    }
+
+    function handleToggle(e, soarFolder) {
+        if (e.target.checked) {
+            downloadFolders.push(soarFolder)
+
+            // Preferences.set({ key: "preferredFolders", value: JSON.stringify(downloadFolders.map(f => f.name)) })
+            Preferences.set({ key: soarFolder.name, value: "true" })
+        } else {
+            downloadFolders = downloadFolders.filter(f => f.name !== soarFolder.name)
+
+            // Preferences.set({ key: "preferredFolders", value: JSON.stringify(downloadFolders.map(f => f.name)) })
+            Preferences.set({ key: soarFolder.name, value: "false" })
+        }
+        console.log(downloadFolders)
+    }
+</script>
+
+<div class="p-4 flex flex-col space-y-4">
+	<button class="btn btn-accent btn-lg" on:click={ () => $viewStore = "comps" }>
+        { comp.name ? "Competition: " + comp.name : "Click to select a competition" }
+    </button>
+
+    <div class="w-full bg-base-200 card card-compact">
+        <div class="card-body">
+            <div>Download to Android/media folders:</div>
+
+            {#await findSoarFolders()}
+                Finding folders...
+            {:then soarFolders}
+                {#each soarFolders as soarFolder}
+                    <label class="label">
+                        <input type="checkbox" class="toggle" checked={ soarFolder.preferred } on:change={ (e) => handleToggle(e, soarFolder) } />
+                        { soarFolder.name }
+                    </label>
+                {/each}
+            {/await}
+        </div>
+    </div>
+
+	<div class="w-full bg-base-200 card card-compact">
+		<div class="card-body">
+		    <h1 class="card-title">
+                Task { selectedClass ? " for class: " : "" }
+            </h1>
+
+		    {#if comp.href}
+    			{#await fetchCompTasks(comp.href)}
+    				Fetching tasks...
+    			{:then tasks}
+    				{#if tasks && tasks.length > 0}
+    					<div>
+    						<div class="dropdown dropdown-start">
+    							<button class="btn btn-secondary m-1" tabindex="0">
+                                    { selectedClass || "Select class" }
+                                </button>
+
+    							<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+    							<ul class="dropdown-content menu bg-base-200 rounded-box z-1 w-52 p-2 shadow-sm" tabindex="0">
+    								{#each tasks as task}
+    									<li><button on:click={ () => { 
+                                            selectedClass = task.taskClass
+
+                                            document.activeElement.blur()
+                                        } }>{ task.taskClass }</button></li>
+    								{/each}
+    							</ul>
+    						</div>
+    
+    						{#if taskByClass(tasks, selectedClass)}
+    							<span>Task { taskByClass(tasks, selectedClass).taskNum }, Day { taskByClass(tasks, selectedClass).taskDay }</span>
+    						{:else}
+    							No class selected
+    						{/if}
+    					</div>
+    
+    					{#if taskByClass(tasks, selectedClass)}
+    						<p>Task generated on { taskByClass(tasks, selectedClass).taskDate }</p>
+    					{/if}
+    
+    					<div class="flex items-center">
+    					    <button on:click={ () => downloadTask(taskByClass(tasks, selectedClass)) } class="btn btn-primary flex-1 { selectedClass ? "" : "btn-disabled" }">
+                                { selectedClass ? "Download Task file" : "Select a class to download task" }
+                            </button>
+        				
+                            {#if taskDownloadSuccess}
+                                <span class="ml-2 text-success p-2 rounded-sm font-semibold text-lg">Success!</span>
+                            {/if}
+    					</div>
+                    {:else}
+    					No tasks available for this competition.
+    				{/if}
+    			{/await}
+    		{:else}
+    			Please select a competition to view tasks
+    		{/if}
+		</div>
+	</div>
+
+    <div class="flex items-center">
+        <button on:click={ () => downloadWaypoints() }  class="btn btn-primary flex-1 { comp.href ? "" : "btn-disabled" }">
+            { comp.href ? "Download competition Waypoints file" : "Select a competition to download Waypoint" }
+        </button>
+    
+        {#if waypointDownloadSuccess}
+            <span class="ml-2 text-success p-2 rounded-sm font-semibold text-lg">Success!</span>
+        {/if}
+    </div>
+
+    <div class="flex items-center">
+        <button on:click={ () => downloadAirspace() }  class="btn btn-primary flex-1 { comp.href ? "" : "btn-disabled" }">
+            { comp.href ? "Download competition Airspace file" : "Select a competition to download Airspace" }
+        </button>
+    
+        {#if airspaceDownloadSuccess}
+            <span class="ml-2 text-success p-2 rounded-sm font-semibold text-lg">Success!</span>
+        {/if}
+    </div>
+
+    <p class="text-xs">
+        Waypoints and Airspace files are downloaded from <a href="https://soaringspot.com" class="link link-primary">SoaringSpot.com</a><br>
+        Task files are downloaded from <a href="https://soarscore.com" class="link link-primary">SoarScore.com</a>
+    </p>
+</div>
