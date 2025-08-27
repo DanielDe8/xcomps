@@ -20,7 +20,6 @@ android/app/build/
 
 # Editor directories and files
 .vscode/*
-!.vscode/extensions.json
 .idea
 .DS_Store
 *.suo
