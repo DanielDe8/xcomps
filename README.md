@@ -11,6 +11,9 @@ The files are overwritten each time you download a new one.
 
 You can download the `.apk` file from the **Releases** tab.
 
+**Warning**: this app may not work with older versions of XCSoar, because they don't store their data in the `Android/media` folder.<br>
+It is recommended to use the latest version of XCSoar, available at [https://xcsoar.org/download/](https://xcsoar.org/download/)
+
 Tasks are downloaded from [SoarScore.com](https://soarscore.com).<br>
 Waypoint and airspace files are downloaded from [SoaringSpot.com](https://soaringspot.com).<br>
 [Corsproxy.io](https://corsproxy.io) is used as a CORS proxy to solve CORS issues - the app is built as a web app with [Svelte](https://svelte.dev), and web apps cannot fetch data from websites unless explicitly allowed.
