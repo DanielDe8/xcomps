@@ -45,7 +45,8 @@ async function fetchCompTasks(compHref) {
     $taskDownloads.each((i, task) => {
         const $task = $(task).find("button")
         
-        const href = $(task).attr("href")
+        const hrefHttp = $(task).attr("href")
+        const href = hrefHttp.replace("http://", "https://")
 
         const $title = $task.find("span > strong")
         $title.find("svg").remove()
