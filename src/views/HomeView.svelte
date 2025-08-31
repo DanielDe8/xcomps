@@ -1,9 +1,10 @@
 <script>
+    import { CapacitorHttp } from "@capacitor/core"
     import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
     import { Preferences } from '@capacitor/preferences'
 	import { fetchCompTasks, fetchCompAirspace, fetchCompWaypoints } from "../lib/fetch"
     import { compStore, viewStore } from "../lib/stores.js"
-    import { CORSPROXY_URL, taskFileName, waypointFileName, airspaceFileName, SOARINGSPOT_URL } from "../lib/consts.js"
+    import { taskFileName, waypointFileName, airspaceFileName, SOARINGSPOT_URL } from "../lib/consts.js"
 
     let taskDownloadSuccess = false
     let waypointDownloadSuccess = false
@@ -30,7 +31,12 @@
         console.log("Downloading task:", task)
         console.log("To folders:", downloadFolders)
 
-        const taskFileContent = await fetch(CORSPROXY_URL + task.href).then(res => res.text())
+        const taskFileRes = await CapacitorHttp.get({ url: task.href }) 
+
+        if (taskFileRes.status != 200) {
+            console.log(taskFileRes)
+            alert(`Failed to fetch task file: ${taskFileRes.status} (Try restarting the app)`)
+        }
 
         for (const folder of downloadFolders) {
             const filePath = `Android/media/${folder.name}/${taskFileName}`
@@ -38,7 +44,7 @@
             try {
                 const result = await Filesystem.writeFile({
                     path: filePath,
-                    data: taskFileContent,
+                    data: taskFileRes.data,
                     directory: Directory.ExternalStorage,
                     encoding: Encoding.UTF8
                 })
@@ -59,10 +65,21 @@
             alert("Please select at least one folder to download the Waypoints file to.")
             return
         }
-        console.log("Downloadint waypoints to folders:", downloadFolders)
+        console.log("Downloading waypoints to folders:", downloadFolders)
 
         const waypointUrl = await fetchCompWaypoints(comp.href)
-        const waypointFileContent = await fetch(SOARINGSPOT_URL + waypointUrl).then(res => res.text())
+
+        if (!waypointUrl) {
+            alert("No waypoint file available for this competition.")
+            return
+        }
+
+        const waypointFileRes = await CapacitorHttp.get({ url: SOARINGSPOT_URL + waypointUrl })
+
+        if (waypointFileRes.status != 200) {
+            console.log(waypointFileRes)
+            alert(`Failed to fetch Waypoints file: ${waypointFileRes.status} (Try restarting the app)`)
+        }
 
         for (const folder of downloadFolders) {
             const filePath = `Android/media/${folder.name}/${waypointFileName}`
@@ -70,7 +87,7 @@
             try {
                 const result = await Filesystem.writeFile({
                     path: filePath,
-                    data: waypointFileContent,
+                    data: waypointFileRes.data,
                     directory: Directory.ExternalStorage,
                     encoding: Encoding.UTF8
                 })
@@ -91,10 +108,21 @@
             alert("Please select at least one folder to download the Airspace file to.")
             return
         }
-        console.log("Downloadint airspace to folders:", downloadFolders)
+        console.log("Downloading airspace to folders:", downloadFolders)
 
         const airspaceUrl = await fetchCompAirspace(comp.href)
-        const airspaceFileContent = await fetch(SOARINGSPOT_URL + airspaceUrl).then(res => res.text())
+
+        if (!airspaceUrl) {
+            alert("No airspace file available for this competition.")
+            return
+        }
+
+        const airspaceFileRes = await CapacitorHttp.get({ url: SOARINGSPOT_URL + airspaceUrl })
+
+        if (airspaceFileRes.status != 200) {
+            console.log(airspaceFileRes)
+            alert(`Failed to fetch Waypoints file: ${airspaceFileRes.status} (Try restarting the app)`)
+        }
 
         for (const folder of downloadFolders) {
             const filePath = `Android/media/${folder.name}/${airspaceFileName}`
@@ -102,7 +130,7 @@
             try {
                 const result = await Filesystem.writeFile({
                     path: filePath,
-                    data: airspaceFileContent,
+                    data: airspaceFileRes.data,
                     directory: Directory.ExternalStorage,
                     encoding: Encoding.UTF8
                 })

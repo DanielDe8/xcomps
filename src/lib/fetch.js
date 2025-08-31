@@ -1,12 +1,15 @@
+import { CapacitorHttp } from "@capacitor/core"
 import * as cheerio from "cheerio";
 import { SOARINGSPOT_URL, SOARSCORE_URL } from "./consts.js";
 
 async function fetchComps() {
-	const res = await fetch(SOARINGSPOT_URL)
-	if (!res.ok) throw new Error("Failed to fetch SoaringSpot page (Try restarting the app")
+	const res = await CapacitorHttp.get({ url: SOARINGSPOT_URL })
+    if (res.status != 200) {
+        console.log(res)
+        throw new Error(`Failed to fetch SoaringSpot page: ${res.status} (Try restarting the app)`)
+    }
 
-	const html = await res.text()
-	const $ = cheerio.load(html)
+    const $ = cheerio.load(res.data)
 
     const $rows = $("div.contest")
 
@@ -32,11 +35,10 @@ async function fetchComps() {
 async function fetchCompTasks(compHref) {
     var tasks = []
 
-    const res = await fetch(SOARSCORE_URL + "/competitions" + compHref)
-    if (!res.ok) throw new Error("Failed to fetch competition tasks on " + SOARSCORE_URL + "/competitions" + compHref)
+    const res = await CapacitorHttp.get({ url: SOARSCORE_URL + "/competitions" + compHref })
+    if (res.status != 200) throw new Error("Failed to fetch competition tasks on " + res.url)
 
-    const html = await res.text()
-    const $ = cheerio.load(html)
+    const $ = cheerio.load(res.data)
 
     const $taskDownloads = $("div#Downloads > p > a[download]")
 
@@ -76,11 +78,10 @@ async function fetchCompTasks(compHref) {
 }
 
 async function fetchCompWaypoints(compHref) {
-    const res = await fetch(SOARINGSPOT_URL + "/en_gb" + compHref + "downloads")
-    if (!res.ok) throw new Error("Failed to fetch competition waypoints on " + SOARINGSPOT_URL + compHref + "downloads")
+    const res = await CapacitorHttp.get({ url: SOARINGSPOT_URL + "/en_gb" + compHref + "downloads" })
+    if (res.status != 200) throw new Error("Failed to fetch competition waypoints on " + res.url)
 
-    const html = await res.text()
-    const $ = cheerio.load(html)
+    const $ = cheerio.load(res.data)
 
     const $waypointsUl = $("ul.contest-downloads:last")
     const $waypointsLinks = $waypointsUl.find("li>a")
@@ -97,11 +98,10 @@ async function fetchCompWaypoints(compHref) {
 }
 
 async function fetchCompAirspace(compHref) {
-    const res = await fetch(SOARINGSPOT_URL + "/en_gb" + compHref + "downloads")
-    if (!res.ok) throw new Error("Failed to fetch competition airspace on " + SOARINGSPOT_URL + compHref + "downloads")
+    const res = await CapacitorHttp.get({ url: SOARINGSPOT_URL + "/en_gb" + compHref + "downloads" })
+    if (res.status != 200) throw new Error("Failed to fetch competition airspace on " + res.url)
 
-    const html = await res.text()
-    const $ = cheerio.load(html)
+    const $ = cheerio.load(res.data)
 
     const $airspaceUl = $("ul.contest-downloads:first")
     const $airspaceLinks = $airspaceUl.find("li>a")

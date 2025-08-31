@@ -1,4 +1,4 @@
-const CORSPROXY_URL = "https://corsproxy.io/?url="
+// const CORSPROXY_URL = "https://corsproxy.io/?url=" // Use only if CORS issues arise
 const SOARINGSPOT_URL = `${CORSPROXY_URL}https://soaringspot.com`
 const SOARSCORE_URL   = `${CORSPROXY_URL}https://soarscore.com`
 
