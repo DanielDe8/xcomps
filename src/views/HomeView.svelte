@@ -4,7 +4,7 @@
     import { Preferences } from '@capacitor/preferences'
 	import { fetchCompTasks, fetchCompAirspace, fetchCompWaypoints } from "../lib/fetch"
     import { compStore, viewStore } from "../lib/stores.js"
-    import { taskFileName, waypointFileName, airspaceFileName, SOARINGSPOT_URL } from "../lib/consts.js"
+    import { APP_VERSION, SOARINGSPOT_URL, taskFileName, waypointFileName, airspaceFileName } from "../lib/consts.js"
 
     let taskDownloadSuccess = false
     let waypointDownloadSuccess = false
@@ -322,6 +322,8 @@
 
     <p class="text-xs">
         Waypoints and Airspace files are downloaded from <a href="https://soaringspot.com" class="link link-primary">SoaringSpot.com</a><br>
-        Task files are downloaded from <a href="https://soarscore.com" class="link link-primary">SoarScore.com</a>
+        Task files are downloaded from <a href="https://soarscore.com" class="link link-primary">SoarScore.com</a><br>
+        <br>
+        <span class="italic">XComps version { APP_VERSION }</span>
     </p>
 </div>
