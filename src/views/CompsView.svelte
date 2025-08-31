@@ -18,7 +18,7 @@
 <div class="pb-24 max-w-md flex flex-col space-y-2 px-4 pt-2">
 	<!-- <h1 class="text-4xl px-2 sticky top-2">Select competition</h1> -->
 	{#await compsPromise}
-		Fetching data...
+		Fetching competitions...
 	{:then comps}
 		{#each comps as comp}
 			<button on:click={ () => setComp(comp) } class="w-full p-4 bg-base-200 card text-left cursor-pointer">
