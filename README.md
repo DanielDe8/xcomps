@@ -15,8 +15,7 @@ You can download the `.apk` file from the [**Releases**](https://github.com/Dani
 It is recommended to use the latest version of XCSoar, available at [https://xcsoar.org/download](https://xcsoar.org/download)
 
 Tasks are downloaded from [SoarScore.com](https://soarscore.com).<br>
-Waypoint and airspace files are downloaded from [SoaringSpot.com](https://soaringspot.com).<br>
-[Corsproxy.io](https://corsproxy.io) is used as a CORS proxy to solve CORS issues - the app is built as a web app with [Svelte](https://svelte.dev), and web apps cannot fetch data from websites unless explicitly allowed.
+Waypoint and airspace files are downloaded from [SoaringSpot.com](https://soaringspot.com).
 
 ## Screenshots
 ![Screenshot 1](./screenshots/screenshot1.png)
