@@ -3,7 +3,7 @@ import { SOARINGSPOT_URL, SOARSCORE_URL } from "./consts.js";
 
 async function fetchComps() {
 	const res = await fetch(SOARINGSPOT_URL)
-	if (!res.ok) throw new Error("Failed to fetch SoaringSpot page")
+	if (!res.ok) throw new Error("Failed to fetch SoaringSpot page (Try restarting the app")
 
 	const html = await res.text()
 	const $ = cheerio.load(html)

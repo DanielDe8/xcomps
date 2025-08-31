@@ -26,7 +26,7 @@
 			</button>
 		{/each}
 	{:catch error}
-		Error: {error.message} (Try restarting the app)
+		Error: {error.message}
 	{/await}
 </div>
 
