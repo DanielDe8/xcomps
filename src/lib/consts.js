@@ -6,4 +6,4 @@ const taskFileName = "xcomps_task.tsk"
 const waypointFileName = "xcomps_waypoints.cup"
 const airspaceFileName = "xcomps_airspace.txt"
 
-export { CORSPROXY_URL, SOARINGSPOT_URL, SOARSCORE_URL, taskFileName, waypointFileName, airspaceFileName }
+export { SOARINGSPOT_URL, SOARSCORE_URL, taskFileName, waypointFileName, airspaceFileName }
