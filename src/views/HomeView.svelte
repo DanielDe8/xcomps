@@ -60,7 +60,7 @@
         }
 	}
 
-    async function downloadWaypoints() {
+    async function downloadWaypoints(waypointsUrl) {
         if (downloadFolders.length === 0) {
             alert("Please select at least one folder to download the Waypoints file to.")
             return
@@ -103,14 +103,12 @@
         }
     }
 
-    async function downloadAirspace() {
+    async function downloadAirspace(airspaceUrl) {
         if (downloadFolders.length === 0) {
             alert("Please select at least one folder to download the Airspace file to.")
             return
         }
         console.log("Downloading airspace to folders:", downloadFolders)
-
-        const airspaceUrl = await fetchCompAirspace(comp.href)
 
         if (!airspaceUrl) {
             alert("No airspace file available for this competition.")
@@ -301,9 +299,27 @@
 	</div>
 
     <div class="flex items-center">
-        <button on:click={ () => downloadWaypoints() }  class="btn btn-primary flex-1 { comp.href ? "" : "btn-disabled" }">
-            { comp.href ? "Download competition Waypoints file" : "Select a competition to download Waypoint" }
-        </button>
+        {#if comp.href}
+            {#await fetchCompWaypoints(comp.href)}
+                <button class="btn btn-primary flex-1 btn-disabled">
+                    Fetching Waypoints data...
+                </button>
+            {:then waypointsUrl}
+                {#if waypointsUrl}
+                     <button on:click={ () => downloadWaypoints(waypointsUrl) }  class="btn btn-primary flex-1">
+                        Download competition Waypoints file
+                    </button>
+                {:else}
+                    <button class="btn btn-primary flex-1 btn-disabled">
+                        No Waypoints file available for this competition
+                    </button>
+                {/if}
+            {/await}
+        {:else}
+            <button class="btn btn-primary flex-1 btn-disabled">
+                Select a competition to download Waypoints file
+            </button>
+        {/if}
     
         {#if waypointDownloadSuccess}
             <span class="ml-2 text-success p-2 rounded-sm font-semibold text-lg">Success!</span>
@@ -311,9 +327,27 @@
     </div>
 
     <div class="flex items-center">
-        <button on:click={ () => downloadAirspace() }  class="btn btn-primary flex-1 { comp.href ? "" : "btn-disabled" }">
-            { comp.href ? "Download competition Airspace file" : "Select a competition to download Airspace" }
-        </button>
+        {#if comp.href}
+            {#await fetchCompAirspace(comp.href)}
+                <button class="btn btn-primary flex-1 btn-disabled">
+                    Fetching Airspace data...
+                </button>
+            {:then airspaceUrl}
+                {#if airspaceUrl}
+                    <button on:click={ () => downloadAirspace(airspaceUrl) }  class="btn btn-primary flex-1">
+                        Download competition Airspace file
+                    </button>
+                {:else} 
+                    <button class="btn btn-primary flex-1 btn-disabled">
+                        No Airspace file available for this competition
+                    </button>
+                {/if}
+            {/await}
+        {:else}
+            <button class="btn btn-primary flex-1 btn-disabled">
+                Select a competition to download Airspace file
+            </button>
+        {/if}
     
         {#if airspaceDownloadSuccess}
             <span class="ml-2 text-success p-2 rounded-sm font-semibold text-lg">Success!</span>
