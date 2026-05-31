@@ -26,7 +26,12 @@ async function fetchComps() {
         href = href.substring(6) // /en_gb/competition/ -> /competition/
 
         console.log({ name, href })
-        comps.push({ name, href })
+
+        if (comps.findIndex(c => c.name == name) == -1) {
+            comps.push({ name, href })
+        } else {
+            console.log("DOUBLE FOUND: " + name)
+        }
     })
 
     return comps
