@@ -27,3 +27,6 @@ android/app/build/
 *.njsproj
 *.sln
 *.sw?
+
+# Key stores
+*.jks
