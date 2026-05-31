@@ -257,9 +257,9 @@
                                 </button>
 
     							<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-    							<ul class="dropdown-content menu bg-base-200 rounded-box z-1 w-52 p-2 shadow-sm" tabindex="0">
+    							<ul class="dropdown-content menu bg-base-content rounded-box z-1 w-52 p-2 shadow-sm" tabindex="0">
     								{#each tasks as task}
-    									<li><button on:click={ () => { 
+    									<li class="text-accent-content font-semibold"><button on:click={ () => { 
                                             selectedClass = task.taskClass
 
                                             document.activeElement.blur()
