@@ -1,13 +1,5 @@
 # Builds a signed release APK and attaches it to GitHub Releases.
-#
-# Required repository secrets:
-#   ANDROID_KEYSTORE_BASE64  - base64-encoded release keystore (.jks)
-#   ANDROID_KEYSTORE_PASSWORD
-#   ANDROID_KEY_ALIAS
-#   ANDROID_KEY_PASSWORD
-#
-# Generate the base64 value with:
-#   base64 -w 0 release.keystore
+# See RELEASE.md for signing setup, secret generation, and release steps.
 
 name: Release Android APK
 
