@@ -2,7 +2,7 @@
     import { CapacitorHttp } from "@capacitor/core"
     import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
     import { Preferences } from '@capacitor/preferences'
-	import { fetchCompTasks, fetchCompAirspace, fetchCompWaypoints } from "../lib/fetch"
+	import { fetchCompTasks, fetchCompAirspace, fetchCompWaypoints, fetchCompTasksSGSP } from "../lib/fetch"
     import { compStore, viewStore } from "../lib/stores.js"
     import { APP_VERSION, taskFileName, waypointFileName, airspaceFileName } from "../lib/consts.js"
 
@@ -186,7 +186,7 @@
             </h1>
 
 		    {#if comp.href}
-    			{#await fetchCompTasks(comp.href)}
+    			{#await fetchCompTasksSGSP(comp.href)}
     				Fetching tasks...
     			{:then tasks}
     				{#if tasks && tasks.length > 0}
@@ -209,15 +209,15 @@
     						</div>
     
     						{#if taskByClass(tasks, selectedClass)}
-    							<span>Task { taskByClass(tasks, selectedClass).taskNum }, Day { taskByClass(tasks, selectedClass).taskDay }</span>
+    							<span>Task { taskByClass(tasks, selectedClass).taskNum }, { taskByClass(tasks, selectedClass).taskDate }</span>
     						{:else}
     							No class selected
     						{/if}
     					</div>
     
-    					{#if taskByClass(tasks, selectedClass)}
+    					<!-- {#if taskByClass(tasks, selectedClass)}
     						<p>Task generated on { taskByClass(tasks, selectedClass).taskDate }</p>
-    					{/if}
+    					{/if} -->
     
     					<div class="flex items-center">
     					    <button on:click={ () => downloadTask(taskByClass(tasks, selectedClass)) } class="btn btn-primary flex-1 { selectedClass ? "" : "btn-disabled" }">
