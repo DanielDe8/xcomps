@@ -11,6 +11,8 @@ The files are overwritten each time you download a new one.
 
 You can download the `.apk` file from the [**Releases**](https://github.com/DanielDe8/xcomps/releases) tab.
 
+For maintainers: see [RELEASE.md](./RELEASE.md) for Android APK signing, GitHub Actions setup, and release instructions.
+
 **Warning**: this app may not work with older versions of XCSoar, because they don't store their data in the `Android/media` folder.<br>
 It is recommended to use the latest version of XCSoar, available at [https://xcsoar.org/download](https://xcsoar.org/download)
 

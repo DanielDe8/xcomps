@@ -1,0 +1,112 @@
+# Builds a signed release APK and attaches it to GitHub Releases.
+# See RELEASE.md for signing setup, secret generation, and release steps.
+
+name: Release Android APK
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag to attach the APK to (leave empty to only upload a workflow artifact)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies and sync Capacitor
+        run: |
+          npm ci
+          npm run cap_build
+
+      - name: Decode signing keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 secret is not configured"
+            exit 1
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
+
+      - name: Build release APK
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_FILE: release.keystore
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Prepare APK artifact
+        id: apk
+        run: |
+          VERSION=$(grep 'versionName' android/app/build.gradle | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+          APK_DIR="android/app/build/outputs/apk/release"
+          if [ -f "$APK_DIR/app-release.apk" ]; then
+            SOURCE_APK="$APK_DIR/app-release.apk"
+          elif [ -f "$APK_DIR/app-release-unsigned.apk" ]; then
+            echo "::error::Release APK is unsigned. Check signing secrets and Gradle config."
+            exit 1
+          else
+            echo "::error::No release APK found in $APK_DIR"
+            ls -la "$APK_DIR" || true
+            exit 1
+          fi
+
+          if [ "${{ github.event_name }}" = "release" ]; then
+            APK_NAME="xcomps-${{ github.event.release.tag_name }}.apk"
+          elif [ -n "${{ inputs.tag }}" ]; then
+            APK_NAME="xcomps-${{ inputs.tag }}.apk"
+          else
+            APK_NAME="xcomps-${VERSION}.apk"
+          fi
+
+          cp "$SOURCE_APK" "$APK_NAME"
+          echo "name=$APK_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to GitHub Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.apk.outputs.name }}
+
+      - name: Upload to tagged GitHub Release
+        if: github.event_name == 'workflow_dispatch' && inputs.tag != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: ${{ steps.apk.outputs.name }}
+
+      - name: Upload workflow artifact
+        if: github.event_name == 'workflow_dispatch' && inputs.tag == ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.apk.outputs.name }}
+          path: ${{ steps.apk.outputs.name }}
+          retention-days: 30

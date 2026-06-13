@@ -1,5 +1,14 @@
 apply plugin: 'com.android.application'
 
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_FILE")
+    ?: (keystoreProperties['storeFile'] ?: null)
+
 android {
     namespace "io.github.danielde8.xcomps"
     compileSdk rootProject.ext.compileSdkVersion
@@ -16,10 +25,23 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (releaseKeystorePath) {
+                storeFile file(releaseKeystorePath)
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: keystoreProperties['storePassword']
+                keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: keystoreProperties['keyAlias']
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: keystoreProperties['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (releaseKeystorePath) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
