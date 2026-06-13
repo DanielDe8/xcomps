@@ -22,126 +22,66 @@
 		return tasks.find(task => task.taskClass == taskClass)
 	}
 
-	async function downloadTask(task) {
-		if (!task) return
+    async function downloadFile({ url, label, fileName, successFlagSetter }) {
         if (downloadFolders.length === 0) {
-            alert("Please select at least one folder to download the task to.")
+            alert(`Please select at least one folder to download the ${label} file to.`)
             return
         }
-        console.log("Downloading task:", task)
-        console.log("To folders:", downloadFolders)
+        console.log(`Downloading ${label} to folders:`, downloadFolders)
 
-        const taskFileRes = await CapacitorHttp.get({ url: task.href }) 
+        const fileRes = await CapacitorHttp.get({ url }) 
 
-        if (taskFileRes.status != 200) {
-            console.log(taskFileRes)
-            alert(`Failed to fetch task file: ${taskFileRes.status} (Try restarting the app)`)
+        if (fileRes.status != 200) {
+            console.log(fileRes)
+            alert(`Failed to fetch ${label} file: ${fileRes.status} (Try restarting the app)`)
         }
 
         for (const folder of downloadFolders) {
-            const filePath = `Android/media/${folder.name}/${taskFileName}`
+            const filePath = `Android/media/${folder.name}/${fileName}`
 
             try {
                 const result = await Filesystem.writeFile({
                     path: filePath,
-                    data: taskFileRes.data,
+                    data: fileRes.data,
                     directory: Directory.ExternalStorage,
                     encoding: Encoding.UTF8
                 })
     
-                console.log(`Task file written to ${folder.name}:`, result)
+                console.log(`${label} file written to ${folder.name}:`, result)
 
-                taskDownloadSuccess = true
-                setTimeout(() => taskDownloadSuccess = false, 1500)
+                successFlagSetter(true)
+                setTimeout(() => successFlagSetter(false), 1500)
             } catch (e) {
-                console.log(`Error writing task file to ${folder.name}:`, e)
-                alert(`Unable to write task file to ${folder.name}: ` + e.message)
+                console.log(`Error writing ${label} file to ${folder.name}:`, e)
+                alert(`Unable to write ${label} file to ${folder.name}: ` + e.message)
             }
-        }
-	}
-
-    async function downloadWaypoints(waypointsUrl) {
-        if (downloadFolders.length === 0) {
-            alert("Please select at least one folder to download the Waypoints file to.")
-            return
-        }
-        console.log("Downloading waypoints to folders:", downloadFolders)
-
-        const waypointUrl = await fetchCompWaypoints(comp.href)
-
-        if (!waypointUrl) {
-            alert("No waypoint file available for this competition.")
-            return
-        }
-
-        const waypointFileRes = await CapacitorHttp.get({ url: SOARINGSPOT_URL + waypointUrl })
-
-        if (waypointFileRes.status != 200) {
-            console.log(waypointFileRes)
-            alert(`Failed to fetch Waypoints file: ${waypointFileRes.status} (Try restarting the app)`)
-        }
-
-        for (const folder of downloadFolders) {
-            const filePath = `Android/media/${folder.name}/${waypointFileName}`
-
-            try {
-                const result = await Filesystem.writeFile({
-                    path: filePath,
-                    data: waypointFileRes.data,
-                    directory: Directory.ExternalStorage,
-                    encoding: Encoding.UTF8
-                })
-            
-                console.log(`Waypoints file written to ${folder.name}:`, result)
-
-                waypointDownloadSuccess = true
-                setTimeout(() => waypointDownloadSuccess = false, 1500)
-            } catch (e) {
-                console.log(`Error writing waypoints file to ${folder.name}:`, e)
-                alert(`Unable to write waypoints file to ${folder.name}: ` + e.message)
-            } 
         }
     }
 
+	async function downloadTask(task) {
+		if (!task) return
+        await downloadFile({
+            url: task.href,
+            label: "task",
+            fileName: taskFileName,
+            successFlagSetter: (v) => taskDownloadSuccess = v
+        })
+	}
+    async function downloadWaypoints(waypointsUrl) {
+        await downloadFile({
+            url: waypointsUrl,
+            label: "waypoints",
+            fileName: waypointFileName,
+            successFlagSetter: (v) => waypointDownloadSuccess = v
+        })
+    }
     async function downloadAirspace(airspaceUrl) {
-        if (downloadFolders.length === 0) {
-            alert("Please select at least one folder to download the Airspace file to.")
-            return
-        }
-        console.log("Downloading airspace to folders:", downloadFolders)
-
-        if (!airspaceUrl) {
-            alert("No airspace file available for this competition.")
-            return
-        }
-
-        const airspaceFileRes = await CapacitorHttp.get({ url: SOARINGSPOT_URL + airspaceUrl })
-
-        if (airspaceFileRes.status != 200) {
-            console.log(airspaceFileRes)
-            alert(`Failed to fetch Waypoints file: ${airspaceFileRes.status} (Try restarting the app)`)
-        }
-
-        for (const folder of downloadFolders) {
-            const filePath = `Android/media/${folder.name}/${airspaceFileName}`
-
-            try {
-                const result = await Filesystem.writeFile({
-                    path: filePath,
-                    data: airspaceFileRes.data,
-                    directory: Directory.ExternalStorage,
-                    encoding: Encoding.UTF8
-                })
-            
-                console.log(`Airspace file written to ${folder.name}:`, result)
-
-                airspaceDownloadSuccess = true
-                setTimeout(() => airspaceDownloadSuccess = false, 1500)
-            } catch (e) {
-                console.log(`Error writing airspace file to ${folder.name}:`, e)
-                alert(`Unable to write airspace file to ${folder.name}: ` + e.message)
-            } 
-        }
+        await downloadFile({
+            url: airspaceUrl,
+            label: "airspace",
+            fileName: airspaceFileName,
+            successFlagSetter: (v) => airspaceDownloadSuccess = v
+        })
     }
 
     async function findSoarFolders() {
