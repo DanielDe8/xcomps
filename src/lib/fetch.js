@@ -123,4 +123,46 @@ async function fetchCompAirspace(compHref) {
     return href
 }
 
-export { fetchComps, fetchCompTasks, fetchCompWaypoints, fetchCompAirspace }
+async function fetchCompTasksSGSP(compHref) { // fetch tasks from soaringspot
+    var tasks = []
+
+    const res = await CapacitorHttp.get({ url: SOARINGSPOT_URL + "/en_gb" + compHref + "results" })
+    if (res.status != 200) throw new Error("Failed to fetch competiton tasks (SoaringSpot) on " + res.url)
+
+    const $ = cheerio.load(res.data)
+
+    const $taskTables = $("table.result-overview")
+
+    $taskTables.each((i, taskTable) => {
+        const $taskTable = $(taskTable)
+
+        const taskClass = $taskTable.find("thead > tr > th > a").text()
+        const $taskRow = $taskTable.find("tbody > tr:first")
+
+        const $taskLink = $taskRow.find("td > a:first")
+        const href = SOARINGSPOT_URL + $taskLink.attr("href")
+        const taskNum = $taskLink.text().split(" ")[1] // get the number after the space ("Task 9")
+
+        const dateRaw = $taskRow.find("td:first").text() // DD/MM/YYYY
+        const dateParts = dateRaw.split("/")
+        const dateObject = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0])
+        const taskDate = new Intl.DateTimeFormat('en-GB', { year: "numeric", month: "long", day: "numeric" }).format(dateObject)
+
+        tasks.push({
+            href,
+            taskClass,
+            // taskDay,
+            taskNum,
+            taskDate
+        })
+    })
+
+    console.log("Fetching tasks form " + SOARINGSPOT_URL)
+    console.log(tasks)
+
+    return tasks
+}
+
+async function generateCompTask(taskHref) {}
+
+export { fetchComps, fetchCompTasks, fetchCompWaypoints, fetchCompAirspace, fetchCompTasksSGSP }
