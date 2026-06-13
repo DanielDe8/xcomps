@@ -17,6 +17,7 @@ android/.idea/
 android/captures/
 android/build/
 android/app/build/
+android/app/release/
 
 # Editor directories and files
 .vscode/*
