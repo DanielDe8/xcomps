@@ -4,7 +4,7 @@
     import { Preferences } from '@capacitor/preferences'
 	import { fetchCompTasks, fetchCompAirspace, fetchCompWaypoints } from "../lib/fetch"
     import { compStore, viewStore } from "../lib/stores.js"
-    import { APP_VERSION, SOARINGSPOT_URL, taskFileName, waypointFileName, airspaceFileName } from "../lib/consts.js"
+    import { APP_VERSION, taskFileName, waypointFileName, airspaceFileName } from "../lib/consts.js"
 
     let taskDownloadSuccess = false
     let waypointDownloadSuccess = false
