@@ -6,7 +6,7 @@ This document explains how Android release APKs are built, how to configure sign
 
 The [Release Android APK](.github/workflows/android-release.yml) workflow builds a signed release APK and makes it available in two ways:
 
-1. **Automatic** — when a GitHub Release is published, the workflow attaches `xcomps-<tag>.apk` to that release.
+1. **Automatic** — when a GitHub Release is published, the workflow attaches `xcomps_<tag>.apk` to that release.
 2. **Manual** — run **Actions → Release Android APK → Run workflow** to rebuild an APK on demand:
    - Leave **tag** empty to download the APK from workflow artifacts.
    - Provide a **tag** to attach the APK to an existing GitHub Release.

@@ -80,11 +80,11 @@ jobs:
           fi
 
           if [ "${{ github.event_name }}" = "release" ]; then
-            APK_NAME="xcomps-${{ github.event.release.tag_name }}.apk"
+            APK_NAME="xcomps_${{ github.event.release.tag_name }}.apk"
           elif [ -n "${{ inputs.tag }}" ]; then
-            APK_NAME="xcomps-${{ inputs.tag }}.apk"
+            APK_NAME="xcomps_${{ inputs.tag }}.apk"
           else
-            APK_NAME="xcomps-${VERSION}.apk"
+            APK_NAME="xcomps_${VERSION}.apk"
           fi
 
           cp "$SOURCE_APK" "$APK_NAME"
