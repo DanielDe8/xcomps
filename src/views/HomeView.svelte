@@ -2,7 +2,7 @@
     import { CapacitorHttp } from "@capacitor/core"
     import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
     import { Preferences } from '@capacitor/preferences'
-	import { fetchCompTasks, fetchCompAirspace, fetchCompWaypoints, fetchCompTasksSGSP, generateCompTask } from "../lib/fetch"
+	import { fetchCompAirspace, fetchCompWaypoints, fetchCompTasksSGSP, generateCompTask } from "../lib/fetch"
     import { compStore, viewStore } from "../lib/stores.js"
     import { APP_VERSION, SOARINGSPOT_URL, taskFileName, waypointFileName, airspaceFileName } from "../lib/consts.js"
 
