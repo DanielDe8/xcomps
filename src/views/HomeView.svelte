@@ -4,7 +4,7 @@
     import { Preferences } from '@capacitor/preferences'
 	import { fetchCompTasks, fetchCompAirspace, fetchCompWaypoints } from "../lib/fetch"
     import { compStore, viewStore } from "../lib/stores.js"
-    import { APP_VERSION, taskFileName, waypointFileName, airspaceFileName } from "../lib/consts.js"
+    import { APP_VERSION, SOARINGSPOT_URL, taskFileName, waypointFileName, airspaceFileName } from "../lib/consts.js"
 
     let taskDownloadSuccess = false
     let waypointDownloadSuccess = false
@@ -69,7 +69,7 @@
 	}
     async function downloadWaypoints(waypointsUrl) {
         await downloadFile({
-            url: waypointsUrl,
+            url: SOARINGSPOT_URL + waypointsUrl,
             label: "waypoints",
             fileName: waypointFileName,
             successFlagSetter: (v) => waypointDownloadSuccess = v
@@ -77,7 +77,7 @@
     }
     async function downloadAirspace(airspaceUrl) {
         await downloadFile({
-            url: airspaceUrl,
+            url: SOARINGSPOT_URL + airspaceUrl,
             label: "airspace",
             fileName: airspaceFileName,
             successFlagSetter: (v) => airspaceDownloadSuccess = v
