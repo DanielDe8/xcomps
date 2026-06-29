@@ -165,4 +165,4 @@ async function fetchCompTasksSGSP(compHref) { // fetch tasks from soaringspot
 
 async function generateCompTask(taskHref) {}
 
-export { fetchComps, fetchCompTasks, fetchCompWaypoints, fetchCompAirspace, fetchCompTasksSGSP }
+export { fetchComps, fetchCompTasks, fetchCompWaypoints, fetchCompAirspace, fetchCompTasksSGSP, generateCompTask }

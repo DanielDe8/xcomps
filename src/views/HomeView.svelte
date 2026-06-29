@@ -2,7 +2,7 @@
     import { CapacitorHttp } from "@capacitor/core"
     import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
     import { Preferences } from '@capacitor/preferences'
-	import { fetchCompTasks, fetchCompAirspace, fetchCompWaypoints, fetchCompTasksSGSP } from "../lib/fetch"
+	import { fetchCompTasks, fetchCompAirspace, fetchCompWaypoints, fetchCompTasksSGSP, generateCompTask } from "../lib/fetch"
     import { compStore, viewStore } from "../lib/stores.js"
     import { APP_VERSION, SOARINGSPOT_URL, taskFileName, waypointFileName, airspaceFileName } from "../lib/consts.js"
 
@@ -22,18 +22,21 @@
 		return tasks.find(task => task.taskClass == taskClass)
 	}
 
-    async function downloadFile({ url, label, fileName, successFlagSetter }) {
+    async function downloadFile({ url, label, fileName, successFlagSetter, altDataFlag = false, altData = "" }) {
         if (downloadFolders.length === 0) {
             alert(`Please select at least one folder to download the ${label} file to.`)
             return
         }
         console.log(`Downloading ${label} to folders:`, downloadFolders)
 
-        const fileRes = await CapacitorHttp.get({ url }) 
+        var fileRes
+        if (!altDataFlag) {
+            fileRes = await CapacitorHttp.get({ url })
 
-        if (fileRes.status != 200) {
-            console.log(fileRes)
-            alert(`Failed to fetch ${label} file: ${fileRes.status} (Try restarting the app)`)
+            if (fileRes.status != 200) {
+                console.log(fileRes)
+                alert(`Failed to fetch ${label} file: ${fileRes.status} (Try restarting the app)`)
+            }
         }
 
         for (const folder of downloadFolders) {
@@ -42,7 +45,7 @@
             try {
                 const result = await Filesystem.writeFile({
                     path: filePath,
-                    data: fileRes.data,
+                    data: altDataFlag ? altData : fileRes.data,
                     directory: Directory.ExternalStorage,
                     encoding: Encoding.UTF8
                 })
@@ -64,7 +67,9 @@
             url: task.href,
             label: "task",
             fileName: taskFileName,
-            successFlagSetter: (v) => taskDownloadSuccess = v
+            successFlagSetter: (v) => taskDownloadSuccess = v,
+            altDataFlag: true,
+            altData: await generateCompTask(task.href)
         })
 	}
     async function downloadWaypoints(waypointsUrl) {
