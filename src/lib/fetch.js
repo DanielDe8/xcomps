@@ -222,7 +222,7 @@ async function generateCompTask(taskHref) {
             .ele("ObservationZone", { type: point.type, radius: point.radius })
     })
 
-    const task = taskXML.end({ pretty: true })
+    const task = taskXML.end({ pretty: true, indent: "\t" })
     console.log(task)
 
     return task
