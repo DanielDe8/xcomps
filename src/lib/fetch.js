@@ -164,6 +164,28 @@ async function fetchCompTasksSGSP(compHref) { // fetch tasks from soaringspot
     return tasks
 }
 
-async function generateCompTask(taskHref) {}
+async function generateCompTask(taskHref) {
+    const res = await CapacitorHttp.get({ url: GLIDEANDSEEK_URL + taskHref })
+    if (res.status != 200) throw new Error("Failed to fetch JSON task from " + res.url)
+    
+    const taskJSON = res.data.message
+
+    var taskXML = xmlbuilder.begin().ele("Task")
+
+    taskJSON.points.forEach((point, i) => {
+        var pointXML = taskXML.ele("Point", { type: i == 0 ? "Start" : (i == taskJSON.points.length - 1 ? "Finish" : "Area") })
+
+        pointXML
+            .ele("Waypoint", { altitude: point.altitude, name: point.name })
+            .ele("Location", { latitude: point.lat, longitude: point.lng })
+        pointXML
+            .ele("ObservationZone", { type: point.type, radius: point.radius })
+    })
+
+    const task = taskXML.end({ pretty: true })
+    console.log(task)
+    
+    return task
+}
 
 export { fetchComps, fetchCompTasks, fetchCompWaypoints, fetchCompAirspace, fetchCompTasksSGSP, generateCompTask }
