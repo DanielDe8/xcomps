@@ -215,11 +215,14 @@ async function generateCompTask(taskHref) {
     taskJSON.points.forEach((point, i) => {
         var pointXML = taskXML.ele("Point", { type: i == 0 ? "Start" : (i == taskJSON.points.length - 1 ? "Finish" : (isAAT ? "Area" : "Turn")) })
 
+        var obsZoneAttr = (point.type == "Line") ? { length : (point.radius * 2).toFixed(1) } 
+            : ((point.type == "Symmetric") ? { length : point.radius.toFixed(1) } : { radius: point.radius.toFixed(1) } )
+
         pointXML
             .ele("Waypoint", { altitude: point.altitude, name: point.name })
             .ele("Location", { latitude: point.lat, longitude: point.lng })
         pointXML
-            .ele("ObservationZone", { type: point.type, radius: point.radius })
+            .ele("ObservationZone", { type: point.type, ...obsZoneAttr })
     })
 
     const task = taskXML.end({ pretty: true, indent: "\t" })
