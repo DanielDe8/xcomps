@@ -222,7 +222,7 @@ async function generateCompTask(taskHref) {
             .ele("Waypoint", { altitude: point.altitude, name: point.name })
             .ele("Location", { latitude: point.lat, longitude: point.lng })
         pointXML
-            .ele("ObservationZone", { type: point.type, ...obsZoneAttr })
+            .ele("ObservationZone", { type: (point.type == "Symmetric" ? "Keyhole" : point.type), ...obsZoneAttr })
     })
 
     const task = taskXML.end({ pretty: true, indent: "\t" })
