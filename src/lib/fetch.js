@@ -177,13 +177,13 @@ async function fetchCompTasksSGSP(compHref) { // fetch tasks from soaringspot
 }
 
 async function generateCompTask(taskHref) {
-    const res = await CapacitorHttp.get({ url: GLIDEANDSEEK_URL + taskHref })
-    if (res.status != 200) {
-        console.log(res)
-        throw new Error("Failed to fetch JSON task from " + res.url)
+    const resJSON = await CapacitorHttp.get({ url: GLIDEANDSEEK_URL + taskHref })
+    if (resJSON.status != 200) {
+        console.log(resJSON)
+        throw new Error("Failed to fetch JSON task from " + resJSON.url)
     }
-    
-    const taskJSON = res.data.message
+
+    const taskJSON = resJSON.data.message
 
     var taskXML = xmlbuilder.begin().ele("Task")
 
@@ -199,7 +199,7 @@ async function generateCompTask(taskHref) {
 
     const task = taskXML.end({ pretty: true })
     console.log(task)
-    
+
     return task
 }
 
