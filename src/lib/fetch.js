@@ -184,11 +184,36 @@ async function generateCompTask(taskHref) {
     }
 
     const taskJSON = resJSON.data.message
+    
+    const resTaskPage = await CapacitorHttp.get({ url: taskHref })
+    if (resTaskPage.status != 200) {
+        console.log(resTaskPage)
+        throw new Error("Failed to fetch task page from " + resTaskPage.url)
+    }
 
-    var taskXML = xmlbuilder.begin().ele("Task")
+    const $ = cheerio.load(resTaskPage.data)
+
+    const $taskDuration = $("div.task-duration")
+    const isAAT = $taskDuration.length != 0
+
+    var aatMinTime
+    if (isAAT) {
+        const taskDurationHMS = $taskDuration.find("span>strong").text()
+        var HMS = taskDurationHMS.split(":", 3)
+
+        if (HMS.length < 3) {
+            while (HMS.unshift("0") != 3) {}
+        }
+
+        aatMinTime = (parseInt(HMS[0]) * 3600) + (parseInt(HMS[1]) * 60) + parseInt(HMS[2])
+    }
+
+    const taskAttr = isAAT ? { type: "AAT", aat_min_time: aatMinTime } : { type: "RT" }
+
+    var taskXML = xmlbuilder.begin().ele("Task", { ...taskAttr, fai_finish: "0" } )
 
     taskJSON.points.forEach((point, i) => {
-        var pointXML = taskXML.ele("Point", { type: i == 0 ? "Start" : (i == taskJSON.points.length - 1 ? "Finish" : "Area") })
+        var pointXML = taskXML.ele("Point", { type: i == 0 ? "Start" : (i == taskJSON.points.length - 1 ? "Finish" : (isAAT ? "Area" : "Turn")) })
 
         pointXML
             .ele("Waypoint", { altitude: point.altitude, name: point.name })
