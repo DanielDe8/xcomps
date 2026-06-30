@@ -17,7 +17,7 @@ For maintainers: see [RELEASE.md](./RELEASE.md) for Android APK signing, GitHub 
 It is recommended to use the latest version of XCSoar, available at [https://xcsoar.org/download](https://xcsoar.org/download)
 
 Tasks are downloaded from [SoarScore.com](https://soarscore.com).<br>
-Waypoint and airspace files are downloaded from [SoaringSpot.com](https://soaringspot.com).
+Waypoint and airspace files are downloaded from [SoaringSpot.com](https://soaringspot.com) or generated using the [GlideAndSeek API](https://api.glideandseek.com/v2/task)
 
 ## Screenshots
 ![Screenshot 1](./screenshots/screenshot1.png)

@@ -302,6 +302,7 @@
     <p class="text-xs">
         Waypoints and Airspace files are downloaded from <a href="https://soaringspot.com" class="link link-primary">SoaringSpot.com</a><br>
         Task files are downloaded from <a href="https://soarscore.com" class="link link-primary">SoarScore.com</a><br>
+        or generated using the <a href="https://api.glideandseek.com/v2/task" class="link link-primary">GlideAndSeek API</a>
         <br>
         <span class="italic">XComps version { APP_VERSION }</span>
     </p>
