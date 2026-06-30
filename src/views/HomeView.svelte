@@ -2,7 +2,7 @@
     import { CapacitorHttp } from "@capacitor/core"
     import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
     import { Preferences } from '@capacitor/preferences'
-	import { fetchCompTasks, fetchCompAirspace, fetchCompWaypoints } from "../lib/fetch"
+	import { fetchCompAirspace, fetchCompWaypoints, fetchCompTasksSGSP, generateCompTask } from "../lib/fetch"
     import { compStore, viewStore } from "../lib/stores.js"
     import { APP_VERSION, SOARINGSPOT_URL, taskFileName, waypointFileName, airspaceFileName } from "../lib/consts.js"
 
@@ -22,18 +22,21 @@
 		return tasks.find(task => task.taskClass == taskClass)
 	}
 
-    async function downloadFile({ url, label, fileName, successFlagSetter }) {
+    async function downloadFile({ url, label, fileName, successFlagSetter, altDataFlag = false, altData = "" }) {
         if (downloadFolders.length === 0) {
             alert(`Please select at least one folder to download the ${label} file to.`)
             return
         }
         console.log(`Downloading ${label} to folders:`, downloadFolders)
 
-        const fileRes = await CapacitorHttp.get({ url }) 
+        var fileRes
+        if (!altDataFlag) {
+            fileRes = await CapacitorHttp.get({ url })
 
-        if (fileRes.status != 200) {
-            console.log(fileRes)
-            alert(`Failed to fetch ${label} file: ${fileRes.status} (Try restarting the app)`)
+            if (fileRes.status != 200) {
+                console.log(fileRes)
+                alert(`Failed to fetch ${label} file: ${fileRes.status} (Try restarting the app)`)
+            }
         }
 
         for (const folder of downloadFolders) {
@@ -42,7 +45,7 @@
             try {
                 const result = await Filesystem.writeFile({
                     path: filePath,
-                    data: fileRes.data,
+                    data: altDataFlag ? altData : fileRes.data,
                     directory: Directory.ExternalStorage,
                     encoding: Encoding.UTF8
                 })
@@ -64,7 +67,9 @@
             url: task.href,
             label: "task",
             fileName: taskFileName,
-            successFlagSetter: (v) => taskDownloadSuccess = v
+            successFlagSetter: (v) => taskDownloadSuccess = v,
+            altDataFlag: true,
+            altData: await generateCompTask(task.href)
         })
 	}
     async function downloadWaypoints(waypointsUrl) {
@@ -186,7 +191,7 @@
             </h1>
 
 		    {#if comp.href}
-    			{#await fetchCompTasks(comp.href)}
+    			{#await fetchCompTasksSGSP(comp.href)}
     				Fetching tasks...
     			{:then tasks}
     				{#if tasks && tasks.length > 0}
@@ -209,15 +214,15 @@
     						</div>
     
     						{#if taskByClass(tasks, selectedClass)}
-    							<span>Task { taskByClass(tasks, selectedClass).taskNum }, Day { taskByClass(tasks, selectedClass).taskDay }</span>
+    							<span>Task { taskByClass(tasks, selectedClass).taskNum }, { taskByClass(tasks, selectedClass).taskDate }</span>
     						{:else}
     							No class selected
     						{/if}
     					</div>
     
-    					{#if taskByClass(tasks, selectedClass)}
+    					<!-- {#if taskByClass(tasks, selectedClass)}
     						<p>Task generated on { taskByClass(tasks, selectedClass).taskDate }</p>
-    					{/if}
+    					{/if} -->
     
     					<div class="flex items-center">
     					    <button on:click={ () => downloadTask(taskByClass(tasks, selectedClass)) } class="btn btn-primary flex-1 { selectedClass ? "" : "btn-disabled" }">

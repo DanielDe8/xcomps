@@ -1,6 +1,7 @@
 import { CapacitorHttp } from "@capacitor/core"
-import * as cheerio from "cheerio";
-import { SOARINGSPOT_URL, SOARSCORE_URL } from "./consts.js";
+import * as cheerio from "cheerio"
+import * as xmlbuilder from "xmlbuilder"
+import { SOARINGSPOT_URL, SOARSCORE_URL, GLIDEANDSEEK_URL } from "./consts.js"
 
 async function fetchComps() {
 	const res = await CapacitorHttp.get({ url: SOARINGSPOT_URL })
@@ -41,7 +42,10 @@ async function fetchCompTasks(compHref) {
     var tasks = []
 
     const res = await CapacitorHttp.get({ url: SOARSCORE_URL + "/competitions" + compHref })
-    if (res.status != 200) throw new Error("Failed to fetch competition tasks on " + res.url)
+    if (res.status != 200) {
+        console.log(res)
+        throw new Error("Failed to fetch competition tasks on " + res.url)
+    }
 
     const $ = cheerio.load(res.data)
 
@@ -85,7 +89,10 @@ async function fetchCompTasks(compHref) {
 
 async function fetchCompWaypoints(compHref) {
     const res = await CapacitorHttp.get({ url: SOARINGSPOT_URL + "/en_gb" + compHref + "downloads" })
-    if (res.status != 200) throw new Error("Failed to fetch competition waypoints on " + res.url)
+    if (res.status != 200) {
+        console.log(res)
+        throw new Error("Failed to fetch competition waypoints on " + res.url)
+    }
 
     const $ = cheerio.load(res.data)
 
@@ -105,7 +112,10 @@ async function fetchCompWaypoints(compHref) {
 
 async function fetchCompAirspace(compHref) {
     const res = await CapacitorHttp.get({ url: SOARINGSPOT_URL + "/en_gb" + compHref + "downloads" })
-    if (res.status != 200) throw new Error("Failed to fetch competition airspace on " + res.url)
+    if (res.status != 200) {
+        console.log(res)
+        throw new Error("Failed to fetch competition airspace on " + res.url)
+    }
 
     const $ = cheerio.load(res.data)
 
@@ -123,4 +133,104 @@ async function fetchCompAirspace(compHref) {
     return href
 }
 
-export { fetchComps, fetchCompTasks, fetchCompWaypoints, fetchCompAirspace }
+async function fetchCompTasksSGSP(compHref) { // fetch tasks from soaringspot
+    var tasks = []
+
+    const res = await CapacitorHttp.get({ url: SOARINGSPOT_URL + "/en_gb" + compHref + "results" })
+    if (res.status != 200) {
+        console.log(res)
+        throw new Error("Failed to fetch competiton tasks (SoaringSpot) on " + res.url)
+    }
+
+    const $ = cheerio.load(res.data)
+
+    const $taskTables = $("table.result-overview")
+
+    $taskTables.each((i, taskTable) => {
+        const $taskTable = $(taskTable)
+
+        const taskClass = $taskTable.find("thead > tr > th > a").text()
+        const $taskRow = $taskTable.find("tbody > tr:first")
+
+        const $taskLink = $taskRow.find("td > a:first")
+        const href = SOARINGSPOT_URL + $taskLink.attr("href")
+        const taskNum = $taskLink.text().split(" ")[1] // get the number after the space ("Task 9")
+
+        const dateRaw = $taskRow.find("td:first").text() // DD/MM/YYYY
+        const dateParts = dateRaw.split("/")
+        const dateObject = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0])
+        const taskDate = new Intl.DateTimeFormat('en-GB', { year: "numeric", month: "long", day: "numeric" }).format(dateObject)
+
+        if (taskClass) {
+            tasks.push({
+                href,
+                taskClass,
+                // taskDay,
+                taskNum,
+                taskDate
+            })
+        }
+    })
+
+    console.log("Fetching tasks form " + SOARINGSPOT_URL)
+    console.log(tasks)
+
+    return tasks
+}
+
+async function generateCompTask(taskHref) {
+    const resJSON = await CapacitorHttp.get({ url: GLIDEANDSEEK_URL + taskHref })
+    if (resJSON.status != 200) {
+        console.log(resJSON)
+        throw new Error("Failed to fetch JSON task from " + resJSON.url)
+    }
+
+    const taskJSON = resJSON.data.message
+    
+    const resTaskPage = await CapacitorHttp.get({ url: taskHref })
+    if (resTaskPage.status != 200) {
+        console.log(resTaskPage)
+        throw new Error("Failed to fetch task page from " + resTaskPage.url)
+    }
+
+    const $ = cheerio.load(resTaskPage.data)
+
+    const $taskDuration = $("div.task-duration")
+    const isAAT = $taskDuration.length != 0
+
+    var aatMinTime
+    if (isAAT) {
+        const taskDurationHMS = $taskDuration.find("span>strong").text()
+        var HMS = taskDurationHMS.split(":", 3)
+
+        if (HMS.length < 3) {
+            while (HMS.unshift("0") != 3) {}
+        }
+
+        aatMinTime = (parseInt(HMS[0]) * 3600) + (parseInt(HMS[1]) * 60) + parseInt(HMS[2])
+    }
+
+    const taskAttr = isAAT ? { type: "AAT", aat_min_time: aatMinTime } : { type: "RT" }
+
+    var taskXML = xmlbuilder.begin().ele("Task", { ...taskAttr, fai_finish: "0" } )
+
+    taskJSON.points.forEach((point, i) => {
+        var pointXML = taskXML.ele("Point", { type: i == 0 ? "Start" : (i == taskJSON.points.length - 1 ? "Finish" : (isAAT ? "Area" : "Turn")) })
+
+        var obsZoneAttr = (point.type == "Line") ? { length : (point.radius * 2).toFixed(1) } 
+            : ((point.type == "Symmetric") ? { length : point.radius.toFixed(1) } : { radius: point.radius.toFixed(1) } )
+
+        pointXML
+            .ele("Waypoint", { altitude: point.altitude, name: point.name })
+            .ele("Location", { latitude: point.lat, longitude: point.lng })
+        pointXML
+            .ele("ObservationZone", { type: (point.type == "Symmetric" ? "Keyhole" : point.type), ...obsZoneAttr })
+    })
+
+    const task = taskXML.end({ pretty: true, indent: "\t" })
+    console.log(task)
+
+    return task
+}
+
+export { fetchComps, fetchCompTasks, fetchCompWaypoints, fetchCompAirspace, fetchCompTasksSGSP, generateCompTask }
