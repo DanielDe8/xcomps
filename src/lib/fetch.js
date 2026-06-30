@@ -1,6 +1,7 @@
 import { CapacitorHttp } from "@capacitor/core"
-import * as cheerio from "cheerio";
-import { SOARINGSPOT_URL, SOARSCORE_URL } from "./consts.js";
+import * as cheerio from "cheerio"
+import * as xmlbuilder from "xmlbuilder"
+import { SOARINGSPOT_URL, SOARSCORE_URL, GLIDEANDSEEK_URL } from "./consts.js"
 
 async function fetchComps() {
 	const res = await CapacitorHttp.get({ url: SOARINGSPOT_URL })
