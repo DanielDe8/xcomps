@@ -161,13 +161,15 @@ async function fetchCompTasksSGSP(compHref) { // fetch tasks from soaringspot
         const dateObject = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0])
         const taskDate = new Intl.DateTimeFormat('en-GB', { year: "numeric", month: "long", day: "numeric" }).format(dateObject)
 
-        tasks.push({
-            href,
-            taskClass,
-            // taskDay,
-            taskNum,
-            taskDate
-        })
+        if (taskClass) {
+            tasks.push({
+                href,
+                taskClass,
+                // taskDay,
+                taskNum,
+                taskDate
+            })
+        }
     })
 
     console.log("Fetching tasks form " + SOARINGSPOT_URL)
