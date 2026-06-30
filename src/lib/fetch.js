@@ -42,7 +42,10 @@ async function fetchCompTasks(compHref) {
     var tasks = []
 
     const res = await CapacitorHttp.get({ url: SOARSCORE_URL + "/competitions" + compHref })
-    if (res.status != 200) throw new Error("Failed to fetch competition tasks on " + res.url)
+    if (res.status != 200) {
+        console.log(res)
+        throw new Error("Failed to fetch competition tasks on " + res.url)
+    }
 
     const $ = cheerio.load(res.data)
 
@@ -86,7 +89,10 @@ async function fetchCompTasks(compHref) {
 
 async function fetchCompWaypoints(compHref) {
     const res = await CapacitorHttp.get({ url: SOARINGSPOT_URL + "/en_gb" + compHref + "downloads" })
-    if (res.status != 200) throw new Error("Failed to fetch competition waypoints on " + res.url)
+    if (res.status != 200) {
+        console.log(res)
+        throw new Error("Failed to fetch competition waypoints on " + res.url)
+    }
 
     const $ = cheerio.load(res.data)
 
@@ -106,7 +112,10 @@ async function fetchCompWaypoints(compHref) {
 
 async function fetchCompAirspace(compHref) {
     const res = await CapacitorHttp.get({ url: SOARINGSPOT_URL + "/en_gb" + compHref + "downloads" })
-    if (res.status != 200) throw new Error("Failed to fetch competition airspace on " + res.url)
+    if (res.status != 200) {
+        console.log(res)
+        throw new Error("Failed to fetch competition airspace on " + res.url)
+    }
 
     const $ = cheerio.load(res.data)
 
@@ -128,7 +137,10 @@ async function fetchCompTasksSGSP(compHref) { // fetch tasks from soaringspot
     var tasks = []
 
     const res = await CapacitorHttp.get({ url: SOARINGSPOT_URL + "/en_gb" + compHref + "results" })
-    if (res.status != 200) throw new Error("Failed to fetch competiton tasks (SoaringSpot) on " + res.url)
+    if (res.status != 200) {
+        console.log(res)
+        throw new Error("Failed to fetch competiton tasks (SoaringSpot) on " + res.url)
+    }
 
     const $ = cheerio.load(res.data)
 
@@ -166,7 +178,10 @@ async function fetchCompTasksSGSP(compHref) { // fetch tasks from soaringspot
 
 async function generateCompTask(taskHref) {
     const res = await CapacitorHttp.get({ url: GLIDEANDSEEK_URL + taskHref })
-    if (res.status != 200) throw new Error("Failed to fetch JSON task from " + res.url)
+    if (res.status != 200) {
+        console.log(res)
+        throw new Error("Failed to fetch JSON task from " + res.url)
+    }
     
     const taskJSON = res.data.message
 
