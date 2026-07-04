@@ -149,12 +149,16 @@ async function fetchCompTasksSGSP(compHref) { // fetch tasks from soaringspot
     $taskTables.each((i, taskTable) => {
         const $taskTable = $(taskTable)
 
-        const taskClass = $taskTable.find("thead > tr > th > a").text()
-        const $taskRow = $taskTable.find("tbody > tr:first")
+        const taskClass = $taskTable.find("thead > tr > th > a").text() || $taskTable.find("thead > tr > th").text().trim() // practice task
+        var $taskRow = $taskTable.find("tbody > tr:first")
+
+        if ($taskRow.find("td:first").text() == "No results yet.") { // practice task
+            $taskRow = $taskRow.next()
+        }
 
         const $taskLink = $taskRow.find("td > a:first")
         const href = SOARINGSPOT_URL + $taskLink.attr("href")
-        const taskNum = $taskLink.text().split(" ")[1] // get the number after the space ("Task 9")
+        const taskNum = $taskLink.text()
 
         const dateRaw = $taskRow.find("td:first").text() // DD/MM/YYYY
         const dateParts = dateRaw.split("/")

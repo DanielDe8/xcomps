@@ -214,7 +214,7 @@
     						</div>
     
     						{#if taskByClass(tasks, selectedClass)}
-    							<span>Task { taskByClass(tasks, selectedClass).taskNum }, { taskByClass(tasks, selectedClass).taskDate }</span>
+    							<span>{ taskByClass(tasks, selectedClass).taskNum }, { taskByClass(tasks, selectedClass).taskDate }</span>
     						{:else}
     							No class selected
     						{/if}
