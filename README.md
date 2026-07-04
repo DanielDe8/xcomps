@@ -16,8 +16,8 @@ For maintainers: see [RELEASE.md](./RELEASE.md) for Android APK signing, GitHub 
 **Warning**: this app may not work with older versions of XCSoar, because they don't store their data in the `Android/media` folder.<br>
 It is recommended to use the latest version of XCSoar, available at [https://xcsoar.org/download](https://xcsoar.org/download)
 
-Tasks are downloaded from [SoarScore.com](https://soarscore.com).<br>
-Waypoint and airspace files are downloaded from [SoaringSpot.com](https://soaringspot.com) or generated using the [GlideAndSeek API](https://api.glideandseek.com/v2/task)
+Waypoint and Airspace files are downloaded from [SoaringSpot.com](https://soaringspot.com)
+Tasks are generated using the [GlideAndSeek API](https://api.glideandseek.com/v2/task)<br>
 
 ## Screenshots
 ![Screenshot 1](./screenshots/screenshot1.png)
