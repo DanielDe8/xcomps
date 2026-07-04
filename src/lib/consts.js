@@ -1,4 +1,4 @@
-const APP_VERSION = "1.3.0"
+const APP_VERSION = "1.3.1"
 
 // const CORSPROXY_URL    = "https://corsproxy.io/?url=" // Use only if CORS issues arise
 const SOARINGSPOT_URL  = "https://soaringspot.com"
