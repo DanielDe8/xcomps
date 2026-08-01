@@ -195,6 +195,8 @@
     				Fetching tasks...
     			{:then tasks}
     				{#if tasks && tasks.length > 0}
+                        { (() => { if (tasks.length == 1) { selectedClass = tasks[0].taskClass } })() } <!-- auto select class when no other available -->
+
     					<div>
     						<div class="dropdown dropdown-start">
     							<button class="btn btn-secondary m-1" tabindex="0">
