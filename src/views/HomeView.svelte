@@ -102,7 +102,7 @@
 
             console.log("SOAR folders:", soarFolders)
 
-            soarFolders = await checkPreferred(soarFolders)
+            soarFolders = await checkPreferredSoarFolders(soarFolders)
 
             console.log("SOAR folders with preferred:", soarFolders)
 
@@ -114,7 +114,7 @@
         }
     }
 
-    async function checkPreferred(soarFolders) {
+    async function checkPreferredSoarFolders(soarFolders) {
         // const preferredFoldersRaw = await Preferences.get({ key: "preferredFolders" })
         // const preferredFolders = JSON.parse(preferredFoldersRaw?.value || "[]")
 
