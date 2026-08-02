@@ -1,13 +1,6 @@
 <script>
 	import { fetchComps } from "../lib/fetch.js"
 	import { viewStore, compStore } from "../lib/stores"
-	import { onMount } from "svelte"
-
-	let compsPromise = null
-
-	onMount(() => {
-		compsPromise = fetchComps()
-	})
 
 	function setComp(comp) {
 		$compStore = JSON.stringify(comp)
@@ -17,7 +10,7 @@
 
 <div class="pb-24 max-w-md flex flex-col space-y-2 px-4 pt-2">
 	<!-- <h1 class="text-4xl px-2 sticky top-2">Select competition</h1> -->
-	{#await compsPromise}
+	{#await fetchComps()}
 		Fetching competitions...
 	{:then comps}
 		{#each comps as comp}
