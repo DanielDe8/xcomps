@@ -8,8 +8,14 @@ import QRCode from 'qrcode'
 import { decodeTaskQr, taskToXml, decodePolyline } from '../src/lib/task-qr.js'
 import { decodeQrPixels } from '../src/lib/qr-image.js'
 
+// Parser/serializer tests include real SeeYou QR bitmaps plus constructed XCTrack tasks.
+// The PNG cases verify the scanner's pixel-to-text boundary; remaining cases pin the
+// normalization rules and ensure unsupported semantics are rejected instead of lost.
+/** Load a checked-in QR payload as UTF-8 text, stripping only its fixture newline. */
 const fixture = name => fs.readFileSync(new URL(`./fixtures/${name}.txt`, import.meta.url), 'utf8').trim()
+/** Return the compressed-format SeeYou fixture as a mutable object for focused edits. */
 const sample = () => JSON.parse(fixture('seeyou-fai').slice(6))
+/** A small XCTrack v1 task covering takeoff, SSS/ESS, and finish options. */
 const v1 = () => ({ taskType: 'CLASSIC', version: 1, turnpoints: [
     { type: 'TAKEOFF', radius: 400, waypoint: { name: 'Launch', lat: 49, lon: 14, altSmoothed: 500 } },
     { type: 'SSS', radius: 1000, waypoint: { name: 'Start & "Gate"', lat: 49.2, lon: -14.1, altSmoothed: -20 } },

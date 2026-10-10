@@ -7,11 +7,14 @@
     import { taskFileName } from '../lib/consts.js'
     import { viewStore, importNoticeStore, qrFileStore, qrSavingStore } from '../lib/stores.js'
 
+    // This view owns one decode worker and, for camera imports, one media stream.
+    // A successfully decoded task replaces the scanner with a review/confirmation form.
     export let source = 'camera'
     let video, fileInput, reader, stream, timer, destroyed = false, generation = 0
     let task = null, error = '', busy = false, saving = false, cameraActive = false
     let downloadFolders = [], acknowledged = false
 
+    /** Stop frame polling, release all camera tracks, and invalidate pending callbacks. */
     function stopCamera() {
         generation++
         clearTimeout(timer)
@@ -20,12 +23,14 @@
         if (video) video.srcObject = null
         cameraActive = false
     }
+    /** Validate a decoded payload and move the view into its review state. */
     function accept(payload) {
         if (!payload) throw new Error('No QR code found. Choose a clear image containing the entire code, including its white border.')
         task = decodeTaskQr(payload)
         acknowledged = false
         error = ''
     }
+    /** Read frames serially until one contains a QR code or the session is stopped. */
     async function scanFrame(token) {
         if (destroyed || token !== generation || !cameraActive) return
         try {
@@ -42,6 +47,7 @@
         }
         timer = setTimeout(() => scanFrame(token), 250)
     }
+    /** Request the rear-facing camera, attach it to the preview, and begin scanning. */
     async function startCamera() {
         stopCamera()
         const token = generation
@@ -66,6 +72,7 @@
                 : e.message || 'Unable to open the camera. You can import a QR photo from files.'
         } finally { if (!destroyed) busy = false }
     }
+    /** Decode a selected photo in the worker; always reset the input for repeat picks. */
     async function loadFile(file) {
         if (!file || busy) return
         stopCamera()
@@ -79,9 +86,11 @@
         } catch (e) { if (!destroyed) error = e.message }
         finally { if (!destroyed) busy = false; if (fileInput) fileInput.value = '' }
     }
+    /** Release camera access when the app/browser hides this screen. */
     function visibilityChanged() {
         if (document.hidden) stopCamera()
     }
+    /** Save only after review and required warning acknowledgement; report partial writes. */
     async function save() {
         if (saving || !task || (task.warnings.length && !acknowledged)) return
         saving = true
@@ -95,12 +104,14 @@
         finally { saving = false }
     }
     $: $qrSavingStore = saving
+    // A pending save blocks Android's back button so the write cannot be interrupted.
     onMount(() => {
         reader = createQrReader()
         document.addEventListener('visibilitychange', visibilityChanged)
         if (source === 'camera') startCamera()
         else if ($qrFileStore) { const file = $qrFileStore; $qrFileStore = null; loadFile(file) }
     })
+    // Invalidate async work and release browser resources whenever this view is left.
     onDestroy(() => { destroyed = true; $qrSavingStore = false; stopCamera(); reader?.destroy(); document.removeEventListener('visibilitychange', visibilityChanged) })
 </script>
 

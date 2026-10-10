@@ -9,6 +9,7 @@ android {
 
 apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
 dependencies {
+    // Provides App.addListener('backButton') and App.exitApp() used by App.svelte.
     implementation project(':capacitor-app')
     implementation project(':capacitor-filesystem')
     implementation project(':capacitor-preferences')

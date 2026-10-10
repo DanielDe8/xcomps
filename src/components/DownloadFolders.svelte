@@ -4,10 +4,13 @@
     import { Preferences } from '@capacitor/preferences'
     import { findSoarFolders } from '../lib/downloads.js'
 
+    // Reusable destination picker; `selected` is bound by whichever view writes a file.
     export let selected = []
+    // Prevent preference changes while a containing screen is saving an import.
     export let disabled = false
     let folders = [], loading = true, error = ''
 
+    /** Reload Android/media destinations and restore each folder's saved preference. */
     async function refresh() {
         loading = true
         error = ''
@@ -19,11 +22,13 @@
         } catch (e) { error = `Unable to read SOAR folders: ${e.message}` }
         finally { loading = false }
     }
+    /** Update the caller's selection immediately and persist this folder's choice. */
     async function toggle(folder, checked) {
         selected = checked ? [...selected.filter(f => f.name !== folder.name), folder] : selected.filter(f => f.name !== folder.name)
         try { await Preferences.set({ key: folder.name, value: String(checked) }) }
         catch { error = 'The folder selection could not be remembered for next time.' }
     }
+    // Discover destinations as soon as this picker is mounted.
     onMount(() => { refresh() })
 </script>
 

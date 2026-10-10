@@ -1,7 +1,10 @@
 import jsQR from 'jsqr'
 
+/** Turn QR decoder results into text while retaining legacy SeeYou byte encodings. */
+
 // Some SeeYou QR codes use ISO-8859-1 bytes without an ECI header. jsQR's
 // UTF-8-only text result is empty for these codes; preserve their waypoint names.
+/** Decode RGBA image pixels to QR text, falling back to ISO-8859-1 when needed. */
 export function decodeQrPixels(data, width, height) {
     const qr = jsQR(data, width, height, { inversionAttempts: 'attemptBoth' })
     if (!qr) return null

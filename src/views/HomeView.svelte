@@ -6,6 +6,7 @@
     import { compStore, viewStore, qrFileStore, importNoticeStore } from "../lib/stores.js"
     import { APP_VERSION, SOARINGSPOT_URL, taskFileName, waypointFileName, airspaceFileName } from "../lib/consts.js"
 
+    // Home combines competition downloads with QR import entry points and shared folders.
     let taskDownloadSuccess = false
     let waypointDownloadSuccess = false
     let airspaceDownloadSuccess = false
@@ -17,6 +18,7 @@
     let downloadFolders = []
     let qrFileInput
 
+    /** Pass the selected photo to the QR review view without losing the File object. */
     function importFile(event) {
         const file = event.target.files?.[0]
         if (!file) return
@@ -26,12 +28,17 @@
         event.target.value = ""
     }
 
+	/** Return the competition task matching the currently selected class, if any. */
 	function taskByClass(tasks, taskClass) {
 		if (!tasks || tasks.length === 0) return null
 
 		return tasks.find(task => task.taskClass == taskClass)
 	}
 
+    /**
+     * Fetch a URL or use pre-generated `altData`, write the result to each selected
+     * folder, then update the supplied success flag. Partial failures remain visible.
+     */
     async function downloadFile({ url, label, fileName, successFlagSetter, altDataFlag = false, altData = "" }) {
         if (downloadFolders.length === 0) {
             alert(`Please select at least one folder to download the ${label} file to.`)
@@ -51,6 +58,7 @@
         } catch (error) { alert(error.message) }
     }
 
+	/** Generate the selected competition task, then save it under XCSoar's task filename. */
 	async function downloadTask(task) {
 		if (!task) return
         await downloadFile({
@@ -62,6 +70,7 @@
             altData: await generateCompTask(task.href)
         })
 	}
+	/** Fetch and save the selected competition waypoint file. */
     async function downloadWaypoints(waypointsUrl) {
         await downloadFile({
             url: SOARINGSPOT_URL + waypointsUrl,
@@ -70,6 +79,7 @@
             successFlagSetter: (v) => waypointDownloadSuccess = v
         })
     }
+	/** Fetch and save the selected competition airspace file. */
     async function downloadAirspace(airspaceUrl) {
         await downloadFile({
             url: SOARINGSPOT_URL + airspaceUrl,

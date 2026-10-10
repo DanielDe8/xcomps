@@ -2,6 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { findSoarFolders, writeDownloadFile, downloadError } from '../src/lib/downloads.js'
 
+// Use small injected plugin fakes to verify folder filtering, preference defaults,
+// UTF-8 paths, and partial failures without requiring Android storage access.
 test('folder discovery preserves opt-out preferences and filters non-folders', async () => {
     const fs = { readdir: async () => ({ files: [{ name: 'org.xcsoar', type: 'directory' }, { name: 'XCSoar-test', type: 'directory' }, { name: 'photos', type: 'directory' }, { name: 'soar.txt', type: 'file' }] }) }
     const prefs = { get: async ({ key }) => ({ value: key === 'org.xcsoar' ? 'false' : null }) }
