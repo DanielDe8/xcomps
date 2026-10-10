@@ -1,9 +1,9 @@
 <script>
     import { CapacitorHttp } from "@capacitor/core"
-    import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
-    import { Preferences } from '@capacitor/preferences'
+    import DownloadFolders from "../components/DownloadFolders.svelte"
+    import { writeDownloadFile, downloadError } from "../lib/downloads.js"
 	import { fetchCompAirspace, fetchCompWaypoints, fetchCompTasksSGSP, generateCompTask } from "../lib/fetch"
-    import { compStore, viewStore } from "../lib/stores.js"
+    import { compStore, viewStore, qrFileStore, importNoticeStore } from "../lib/stores.js"
     import { APP_VERSION, SOARINGSPOT_URL, taskFileName, waypointFileName, airspaceFileName } from "../lib/consts.js"
 
     let taskDownloadSuccess = false
@@ -15,6 +15,16 @@
 	$: comp = JSON.parse($compStore)
 
     let downloadFolders = []
+    let qrFileInput
+
+    function importFile(event) {
+        const file = event.target.files?.[0]
+        if (!file) return
+        $qrFileStore = file
+        $importNoticeStore = ""
+        $viewStore = "qr-files"
+        event.target.value = ""
+    }
 
 	function taskByClass(tasks, taskClass) {
 		if (!tasks || tasks.length === 0) return null
@@ -27,38 +37,18 @@
             alert(`Please select at least one folder to download the ${label} file to.`)
             return
         }
-        console.log(`Downloading ${label} to folders:`, downloadFolders)
-
-        var fileRes
-        if (!altDataFlag) {
-            fileRes = await CapacitorHttp.get({ url })
-
-            if (fileRes.status != 200) {
-                console.log(fileRes)
-                alert(`Failed to fetch ${label} file: ${fileRes.status} (Try restarting the app)`)
+        try {
+            let data = altData
+            if (!altDataFlag) {
+                const result = await CapacitorHttp.get({ url })
+                if (result.status !== 200) throw new Error(`Failed to fetch ${label} file: ${result.status}`)
+                data = result.data
             }
-        }
-
-        for (const folder of downloadFolders) {
-            const filePath = `Android/media/${folder.name}/${fileName}`
-
-            try {
-                const result = await Filesystem.writeFile({
-                    path: filePath,
-                    data: altDataFlag ? altData : fileRes.data,
-                    directory: Directory.ExternalStorage,
-                    encoding: Encoding.UTF8
-                })
-    
-                console.log(`${label} file written to ${folder.name}:`, result)
-
-                successFlagSetter(true)
-                setTimeout(() => successFlagSetter(false), 1500)
-            } catch (e) {
-                console.log(`Error writing ${label} file to ${folder.name}:`, e)
-                alert(`Unable to write ${label} file to ${folder.name}: ` + e.message)
-            }
-        }
+            const result = await writeDownloadFile(data, fileName, downloadFolders)
+            if (result.failed.length) { alert(downloadError(result)); return }
+            successFlagSetter(true)
+            setTimeout(() => successFlagSetter(false), 1500)
+        } catch (error) { alert(error.message) }
     }
 
 	async function downloadTask(task) {
@@ -89,77 +79,6 @@
         })
     }
 
-    async function findSoarFolders() {
-        try {
-            const result = await Filesystem.readdir({
-                path: "Android/media",
-                directory: Directory.ExternalStorage
-            })
-            console.log("Read dir result:", result)
-
-            var soarFolders = result.files.filter(info => info.name.includes('soar') && info.type == "directory")
-                .map((info) => ({ name: info.name, preferred: false }))
-
-            console.log("SOAR folders:", soarFolders)
-
-            soarFolders = await checkPreferredSoarFolders(soarFolders)
-
-            console.log("SOAR folders with preferred:", soarFolders)
-
-            return soarFolders
-        } catch (e) {
-            alert('Unable to read SOAR folders: ' + e.message)
-            console.log("Error reading SOAR folders:", e)
-            return []
-        }
-    }
-
-    async function checkPreferredSoarFolders(soarFolders) {
-        // const preferredFoldersRaw = await Preferences.get({ key: "preferredFolders" })
-        // const preferredFolders = JSON.parse(preferredFoldersRaw?.value || "[]")
-
-        // console.log("Raw preferred folders from preferences:", preferredFoldersRaw)
-        // console.log("preferred folders from preferences:", preferredFolders)
-
-        // downloadFolders
-        //     .push(...preferredFolders?.filter(f => soarFolders.some(sf => sf.name === f))?.map((name) => ({ name, preferred: true })) || [])
-
-        // console.log("Download folders:", downloadFolders)
-
-        // return soarFolders.map(folder => ({
-        //     ...folder,
-        //     preferred: preferredFolders?.includes(folder.name) || false
-        // }))
-
-        return await Promise.all(soarFolders.map(async (folder) => {
-            const preferredRaw = await Preferences.get({ key: folder.name })
-            var preferred = (preferredRaw?.value || "true") == "true" // true by default
-
-            if (preferred) {
-                downloadFolders.push(folder)
-            }
-
-            return {
-                ...folder,
-                preferred
-            }
-        }))
-    }
-
-    function handleToggle(e, soarFolder) {
-        if (e.target.checked) {
-            downloadFolders.push(soarFolder)
-
-            // Preferences.set({ key: "preferredFolders", value: JSON.stringify(downloadFolders.map(f => f.name)) })
-            Preferences.set({ key: soarFolder.name, value: "true" })
-        } else {
-            downloadFolders = downloadFolders.filter(f => f.name !== soarFolder.name)
-
-            // Preferences.set({ key: "preferredFolders", value: JSON.stringify(downloadFolders.map(f => f.name)) })
-            Preferences.set({ key: soarFolder.name, value: "false" })
-        }
-        console.log(downloadFolders)
-    }
 </script>
 
 <div class="p-4 flex flex-col space-y-4">
@@ -167,22 +86,18 @@
         { comp.name ? "Competition: " + comp.name : "Click to select a competition" }
     </button>
 
-    <div class="w-full bg-base-200 card card-compact">
-        <div class="card-body">
-            <div>Download to Android/media folders:</div>
-
-            {#await findSoarFolders()}
-                Finding folders...
-            {:then soarFolders}
-                {#each soarFolders as soarFolder}
-                    <label class="label">
-                        <input type="checkbox" class="toggle" checked={ soarFolder.preferred } on:change={ (e) => handleToggle(e, soarFolder) } />
-                        { soarFolder.name }
-                    </label>
-                {/each}
-            {/await}
-        </div>
+    <div class="grid gap-3 {comp.name ? 'grid-cols-2' : 'grid-cols-1'}">
+        <button class="btn btn-secondary h-auto min-h-16 py-3" on:click={() => { $importNoticeStore = ''; $viewStore = 'qr-camera' }}>
+            Import task QR code from camera
+        </button>
+        <button class="btn btn-secondary h-auto min-h-16 py-3" on:click={() => qrFileInput.click()}>
+            Import task QR code from files
+        </button>
     </div>
+    <input bind:this={qrFileInput} type="file" accept="image/*" class="hidden" aria-label="QR code image" on:change={importFile} />
+    {#if $importNoticeStore}<p class="alert alert-success break-words" role="status">{$importNoticeStore}</p>{/if}
+
+    <DownloadFolders bind:selected={downloadFolders} />
 
 	<div class="w-full bg-base-200 card card-compact">
 		<div class="card-body">

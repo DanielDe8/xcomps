@@ -8,26 +8,32 @@
     "build": "vite build",
     "preview": "vite preview",
     "cap": "vite build && npx cap sync && npx cap open android",
-    "cap_build": "vite build && npx cap sync"
+    "cap_build": "vite build && npx cap sync",
+    "test": "node --test"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@sveltejs/vite-plugin-svelte": "^6.1.0",
     "autoprefixer": "^10.4.21",
     "daisyui": "^4.12.24",
+    "pngjs": "^7.0.0",
     "postcss": "^8.5.6",
+    "qrcode": "^1.5.4",
     "svelte": "^5.37.3",
     "tailwindcss": "^3.4.17",
     "vite": "^7.1.0"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.2",
+    "@capacitor/app": "^7.1.0",
     "@capacitor/cli": "^7.4.2",
     "@capacitor/core": "^7.4.2",
     "@capacitor/filesystem": "^7.1.4",
     "@capacitor/preferences": "^7.0.2",
     "cheerio": "^1.1.2",
     "core-js": "^3.45.0",
+    "jsqr": "^1.4.0",
+    "pako": "^2.1.0",
     "xmlbuilder": "^15.1.1"
   }
 }
